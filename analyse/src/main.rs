@@ -25,6 +25,7 @@ struct Stats {
     p95: u64,
 }
 
+#[inline(never)]
 fn read_data() -> Result<Data, Box<dyn Error>> {
     let mut all_data: Data = Default::default();
     for line in std::io::stdin().lock().lines().skip(1) {
@@ -52,6 +53,7 @@ fn read_data() -> Result<Data, Box<dyn Error>> {
     Ok(all_data)
 }
 
+#[inline(never)]
 fn analyse(data: Data) {
     data.into_iter()
         .for_each(|(country, data)| analyse_country(country, data));

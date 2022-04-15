@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
+use memmap2::Mmap;
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::io::BufRead;
+use std::fs::File;
 use std::time::Instant;
 
 type Data = BTreeMap<String, Vec<Entry>>;
@@ -28,8 +29,10 @@ struct Stats {
 #[inline(never)]
 fn read_data() -> Result<Data, Box<dyn Error>> {
     let mut all_data: Data = Default::default();
-    for line in std::io::stdin().lock().lines().skip(1) {
-        let line = line?;
+    let file = File::open("../data.csv")?;
+    let file = unsafe { Mmap::map(&file)? };
+    let input: &str = std::str::from_utf8(file.as_ref())?;
+    for line in input.lines().skip(1) {
         let mut items = line.split(", ");
         let country = items.next().unwrap();
         let id = items.next().unwrap().parse()?;

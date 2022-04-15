@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use smallvec::SmallVec;
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::io::BufRead;
@@ -30,7 +31,8 @@ fn read_data() -> Result<Data, Box<dyn Error>> {
     let mut all_data: Data = Default::default();
     for line in std::io::stdin().lock().lines().skip(1) {
         let line = line?;
-        let items: Vec<&str> = line.split(", ").collect();
+        let items: SmallVec<[&str; 6]> = line.split(", ").collect();
+        debug_assert!(!items.spilled());
         let country = items[0];
         let id = items[1].parse()?;
         let author_age = items[2].parse()?;

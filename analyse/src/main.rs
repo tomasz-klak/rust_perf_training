@@ -5,8 +5,9 @@ use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs::File;
 use std::time::Instant;
+use rustc_hash::FxHashMap;
 
-type Data = rustc_hash::FxHashMap<String, Vec<Entry>>;
+type Data = FxHashMap<String, Vec<Entry>>;
 
 #[derive(Debug)]
 struct Entry {
@@ -29,7 +30,7 @@ struct Stats {
 #[inline(never)]
 fn read_data() -> Result<Data, Box<dyn Error>> {
     let mut all_data: Data = Default::default();
-    let file = File::open("../data.csv")?;
+    let file = File::open(format!("{}/../data.csv", env!("CARGO_MANIFEST_DIR")))?;
     let file = unsafe { Mmap::map(&file)? };
     let input: &str = std::str::from_utf8(file.as_ref())?;
     for line in input.lines().skip(1) {
@@ -66,13 +67,9 @@ fn analyse_country(country: String, data: Vec<Entry>) {
     let author_age = analyse_prop(data.iter().map(|d| d.author_age));
     let pages = analyse_prop(data.iter().map(|d| d.pages));
     let publication_age = analyse_prop(data.iter().map(|d| d.publication_age));
-    let mut pub_by_nationality: BTreeMap<String, usize> = Default::default();
-    for nat in data.iter().map(|e| &e.author_nationality) {
-        if pub_by_nationality.contains_key(nat) {
-            *pub_by_nationality.get_mut(nat).unwrap() += 1;
-        } else {
-            pub_by_nationality.insert(nat.to_owned(), 1);
-        }
+    let mut pub_by_nationality: FxHashMap<_, usize> = Default::default();
+    for nat in data.into_iter().map(|e| e.author_nationality) {
+        *pub_by_nationality.entry(nat).or_default() += 1;
     }
     let most_common_nat = pub_by_nationality.into_iter().max_by_key(|(_, v)| *v);
     println!("{country} stats: most common nationality: {most_common_nat:?} author_age: {author_age:?} pages: {pages:?} publication_age: {publication_age:?}");

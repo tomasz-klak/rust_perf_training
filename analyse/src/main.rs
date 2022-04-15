@@ -80,7 +80,7 @@ fn analyse_country(country: String, data: Vec<Entry>) {
 
 fn analyse_prop(values: impl Iterator<Item = u64>) -> Stats {
     let mut values: Vec<u64> = values.collect();
-    values.sort();
+    values.sort_unstable();
     let mean = values.iter().sum::<u64>() / values.len() as u64;
     Stats {
         mean,

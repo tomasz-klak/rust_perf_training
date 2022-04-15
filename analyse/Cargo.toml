@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 smallvec="1"
 memmap2 = "0.5"
+rustc-hash = "1"
 
 [profile.release]
 debug = true

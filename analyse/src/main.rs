@@ -6,7 +6,7 @@ use std::error::Error;
 use std::fs::File;
 use std::time::Instant;
 
-type Data = BTreeMap<String, Vec<Entry>>;
+type Data = rustc_hash::FxHashMap<String, Vec<Entry>>;
 
 #[derive(Debug)]
 struct Entry {

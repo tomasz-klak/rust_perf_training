@@ -1,21 +1,20 @@
 #![allow(dead_code)]
 
 use memmap2::Mmap;
-use std::collections::BTreeMap;
+use rustc_hash::FxHashMap;
 use std::error::Error;
 use std::fs::File;
 use std::time::Instant;
-use rustc_hash::FxHashMap;
 
-type Data = FxHashMap<String, Vec<Entry>>;
+type Data = FxHashMap<String, CountryData>;
 
-#[derive(Debug)]
-struct Entry {
-    id: u64,
-    author_age: u64,
-    pages: u64,
-    publication_age: u64,
-    author_nationality: String,
+#[derive(Debug, Default)]
+struct CountryData {
+    id: Vec<u64>,
+    author_age: Vec<u64>,
+    pages: Vec<u64>,
+    publication_age: Vec<u64>,
+    author_nationality: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -41,17 +40,21 @@ fn read_data() -> Result<Data, Box<dyn Error>> {
         let pages = items.next().unwrap().parse()?;
         let publication_age = items.next().unwrap().parse()?;
         let author_nationality = items.next().unwrap().to_owned();
-        let e = Entry {
-            id,
-            author_age,
-            pages,
-            publication_age,
-            author_nationality,
-        };
         if all_data.contains_key(country) {
-            all_data.get_mut(country).unwrap().push(e);
+            let e = all_data.get_mut(country).unwrap();
+            e.id.push(id);
+            e.author_age.push(author_age);
+            e.pages.push(pages);
+            e.publication_age.push(publication_age);
+            e.author_nationality.push(author_nationality);
         } else {
-            all_data.insert(country.to_owned(), vec![e]);
+            let mut e = CountryData::default();
+            e.id.push(id);
+            e.author_age.push(author_age);
+            e.pages.push(pages);
+            e.publication_age.push(publication_age);
+            e.author_nationality.push(author_nationality);
+            all_data.insert(country.to_owned(), e);
         }
     }
     Ok(all_data)
@@ -63,20 +66,19 @@ fn analyse(data: Data) {
         .for_each(|(country, data)| analyse_country(country, data));
 }
 
-fn analyse_country(country: String, data: Vec<Entry>) {
-    let author_age = analyse_prop(data.iter().map(|d| d.author_age));
-    let pages = analyse_prop(data.iter().map(|d| d.pages));
-    let publication_age = analyse_prop(data.iter().map(|d| d.publication_age));
+fn analyse_country(country: String, data: CountryData) {
+    let author_age = analyse_prop(data.author_age);
+    let pages = analyse_prop(data.pages);
+    let publication_age = analyse_prop(data.publication_age);
     let mut pub_by_nationality: FxHashMap<_, usize> = Default::default();
-    for nat in data.into_iter().map(|e| e.author_nationality) {
+    for nat in data.author_nationality.into_iter() {
         *pub_by_nationality.entry(nat).or_default() += 1;
     }
     let most_common_nat = pub_by_nationality.into_iter().max_by_key(|(_, v)| *v);
     println!("{country} stats: most common nationality: {most_common_nat:?} author_age: {author_age:?} pages: {pages:?} publication_age: {publication_age:?}");
 }
 
-fn analyse_prop(values: impl Iterator<Item = u64>) -> Stats {
-    let mut values: Vec<u64> = values.collect();
+fn analyse_prop(mut values: Vec<u64>) -> Stats {
     values.sort_unstable();
     let mean = values.iter().sum::<u64>() / values.len() as u64;
     Stats {

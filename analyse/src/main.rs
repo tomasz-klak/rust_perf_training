@@ -10,20 +10,20 @@ type Data = FxHashMap<String, CountryData>;
 
 #[derive(Debug, Default)]
 struct CountryData {
-    id: Vec<u64>,
-    author_age: Vec<u64>,
-    pages: Vec<u64>,
-    publication_age: Vec<u64>,
+    id: Vec<u32>,
+    author_age: Vec<u32>,
+    pages: Vec<u32>,
+    publication_age: Vec<u32>,
     author_nationality: Vec<String>,
 }
 
 #[derive(Debug)]
 struct Stats {
-    min: u64,
-    max: u64,
-    mean: u64,
-    med: u64,
-    p95: u64,
+    min: u32,
+    max: u32,
+    mean: u32,
+    med: u32,
+    p95: u32,
 }
 
 #[inline(never)]
@@ -78,9 +78,9 @@ fn analyse_country(country: String, data: CountryData) {
     println!("{country} stats: most common nationality: {most_common_nat:?} author_age: {author_age:?} pages: {pages:?} publication_age: {publication_age:?}");
 }
 
-fn analyse_prop(mut values: Vec<u64>) -> Stats {
+fn analyse_prop(mut values: Vec<u32>) -> Stats {
     values.sort_unstable();
-    let mean = values.iter().sum::<u64>() / values.len() as u64;
+    let mean = values.iter().sum::<u32>() / values.len() as u32;
     Stats {
         mean,
         min: values[0],
